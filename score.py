@@ -6,6 +6,23 @@ from contextlib import contextmanager
 import threading
 import _thread
 import time
+import signal
+
+
+# @contextmanager
+# def raise_timeout(timeout):
+#     def _handler(signum, frame):
+#         raise TimeOutException()
+#     signal.signal(signal.SIGALRM, _handler)
+#     signal.alarm(timeout)
+
+#     try:
+#         yield
+#     except TimeOutException:
+#         print(f"Timeout after {timeout} seconds")
+#         raise
+#     finally:
+#         signal.alarm(0)
 
 
 class TimeoutException(Exception):
@@ -14,16 +31,24 @@ class TimeoutException(Exception):
 
 @contextmanager
 def time_limit(seconds, msg=''):
-    timer = threading.Timer(seconds, lambda: _thread.interrupt_main())
-    timer.start()
+    def _handler(signum, frame):
+        raise TimeOutException("Timed out for operation {}".format(msg))
+    signal.signal(signal.SIGALRM, _handler)
+#     print(seconds)
+    signal.alarm(int(seconds))
+    
+#     timer = threading.Timer(seconds, lambda: _thread.interrupt_main())
+#     timer.start()
     try:
         yield
-    except KeyboardInterrupt:
-        raise TimeoutException("Timed out for operation {}".format(msg))
+    except TimeOutException:
+        raise 
     finally:
         # if the action ends in specified time, timer is canceled
-        timer.cancel()
+#         timer.cancel()
+        signal.alarm(0)
 
+    
 
 def simplify_eq(eq):
     return str(expand(simplify(eq)))

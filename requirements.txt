@@ -5,3 +5,5 @@ scipy
 contextlib
 threading
 findiff
+matplotlib
+pysindy
